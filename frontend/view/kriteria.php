@@ -28,45 +28,45 @@
         <div class="container-fluid">
           <!--  Row 1 -->
           <div class="card">
-  <div class="card-body">
-    <div class="d-flex justify-content-between mb-3">
-      <h5 class="card-title fw-semibold">Data Kriteria</h5>
-      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalTambahKriteria">Tambah Kriteria</button>
-    </div>
+            <div class="card-body">
+              <div class="d-flex justify-content-between mb-3">
+                <h5 class="card-title fw-semibold">Data Kriteria</h5>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalTambahKriteria">Tambah Kriteria</button>
+              </div>
 
-    <div class="table-responsive">
-      <table id="tabel-kriteria" class="table table-bordered table-striped">
-        <thead class="table-dark">
-          <tr>
-            <th>No</th>
-            <th>Nama Kriteria</th>
-            <th>Jumlah Nilai</th>
-            <th>Detail</th>
-          </tr>
-        </thead>
-        <tbody>
-          <?php
-          include '../database/config.php';
-          $no = 1;
-          $query = mysqli_query($databaseConnection, "SELECT k.id_kriteria, k.nama_kriteria, COUNT(n.id_nilai) as jumlah_nilai 
-                                        FROM kriteria k 
-                                        LEFT JOIN nilai_kriteria n ON k.id_kriteria = n.id_kriteria 
-                                        GROUP BY k.id_kriteria");
-          while ($row = mysqli_fetch_assoc($query)) {
-              echo "<tr>";
-              echo "<td>{$no}</td>";
-              echo "<td>{$row['nama_kriteria']}</td>";
-              echo "<td>{$row['jumlah_nilai']}</td>";
-              echo "<td><a href='detail_kriteria.php?id={$row['id_kriteria']}' class='btn btn-sm btn-info'>Detail</a></td>";
-              echo "</tr>";
-              $no++;
-          }
-          ?>
-        </tbody>
-      </table>
-    </div>
-  </div>
-</div>
+              <div class="table-responsive">
+                <table id="tabel-kriteria" class="table table-bordered table-striped">
+                  <thead class="table-dark">
+                    <tr>
+                      <th>No</th>
+                      <th>Nama Kriteria</th>
+                      <th>Jumlah Nilai</th>
+                      <th>Detail</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <?php
+                    include '../database/config.php';
+                    $no = 1;
+                    $query = mysqli_query($databaseConnection, "SELECT k.id_kriteria, k.nama_kriteria, COUNT(n.id_nilai) as jumlah_nilai 
+                                                  FROM kriteria k 
+                                                  LEFT JOIN nilai_kriteria n ON k.id_kriteria = n.id_kriteria 
+                                                  GROUP BY k.id_kriteria");
+                    while ($row = mysqli_fetch_assoc($query)) {
+                        echo "<tr>";
+                        echo "<td>{$no}</td>";
+                        echo "<td>{$row['nama_kriteria']}</td>";
+                        echo "<td>{$row['jumlah_nilai']}</td>";
+                        echo "<td><a href='detail_kriteria.php?id={$row['id_kriteria']}' class='btn btn-sm btn-info'>Detail</a></td>";
+                        echo "</tr>";
+                        $no++;
+                    }
+                    ?>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
 
 
 
