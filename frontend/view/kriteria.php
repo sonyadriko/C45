@@ -1,3 +1,7 @@
+<?php
+include '../includes/auth_helper.php';
+requireAdmin(); // Hanya admin yang bisa akses halaman ini
+?>
 <!doctype html>
 <html lang="en">
 

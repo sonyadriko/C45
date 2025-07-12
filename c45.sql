@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Waktu pembuatan: 12 Jul 2025 pada 17.03
+-- Waktu pembuatan: 12 Jul 2025 pada 17.51
 -- Versi server: 10.4.32-MariaDB
 -- Versi PHP: 8.1.25
 
@@ -1161,15 +1161,17 @@ CREATE TABLE `users` (
   `password` varchar(255) NOT NULL,
   `alamat` varchar(255) NOT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `role` varchar(20) NOT NULL DEFAULT 'kepala_toko'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data untuk tabel `users`
 --
 
-INSERT INTO `users` (`id`, `name`, `username`, `password`, `alamat`, `created_at`, `updated_at`) VALUES
-(1, 'admin', 'admin', '0192023a7bbd73250516f069df18b500', '', NULL, NULL);
+INSERT INTO `users` (`id`, `name`, `username`, `password`, `alamat`, `created_at`, `updated_at`, `role`) VALUES
+(1, 'admin', 'admin', '0192023a7bbd73250516f069df18b500', '', NULL, NULL, 'admin'),
+(2, 'Kepala Toko', 'kepalatoko', '16fa1255af215371bde440de1454cdc5', '', NULL, NULL, 'kepala_toko');
 
 --
 -- Indexes for dumped tables
@@ -1237,7 +1239,7 @@ ALTER TABLE `responden`
 -- AUTO_INCREMENT untuk tabel `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

@@ -7,8 +7,6 @@ if (isset($_SESSION['user'])) {
     exit;
 }
 
-
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = mysqli_real_escape_string($databaseConnection, $_POST['username']);
     $password = md5($_POST['password']);
@@ -18,8 +16,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (mysqli_num_rows($result) == 1) {
         $user = mysqli_fetch_assoc($result);
+        // Pastikan role ada, jika tidak set default ke 'user'
+        if (!isset($user['role'])) {
+            $user['role'] = 'user';
+        }
         $_SESSION['user'] = $user;
-        header('Location: index.php'); // Ganti ke halaman utama kamu
+        header('Location: index.php');
         exit;
     } else {
         echo "<script>alert('Login gagal! Username atau password salah'); window.location.href='login.php';</script>";

@@ -1,4 +1,7 @@
 <?php
+include '../includes/auth_helper.php';
+requireAdmin(); // Hanya admin yang bisa akses halaman ini
+
 include '../database/config.php';
 $successMessage = '';
 if (isset($_GET['upload']) && $_GET['upload'] === 'success') {
