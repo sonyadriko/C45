@@ -88,12 +88,29 @@ if (isset($_GET['upload']) && $_GET['upload'] === 'success') {
 
     <script>
     document.getElementById('btnProses').addEventListener('click', () => {
+      // Tampilkan loading state
+      const btn = document.getElementById('btnProses');
+      const originalText = btn.textContent;
+      btn.textContent = 'Memproses...';
+      btn.disabled = true;
+      
       fetch('http://localhost:5000/c45/run')
         .then(res => res.json())
         .then(data => {
-          document.getElementById('hasilC45').textContent = data.tree;
+          // Tampilkan hasil dalam alert atau buat elemen baru
+          alert('Analisis C4.5 berhasil diproses!\n\nHasil tersimpan di:\n- Gambar: ' + data.image_saved + '\n- JSON: ' + data.json_saved + '\n\nPesan: ' + data.message);
+          
+          // Redirect ke halaman pohon keputusan untuk melihat hasil
+          window.location.href = 'pohon_keputusan.php';
         })
-        .catch(err => alert("Gagal hitung: " + err));
+        .catch(err => {
+          alert("Gagal memproses analisis: " + err);
+        })
+        .finally(() => {
+          // Kembalikan button ke state semula
+          btn.textContent = originalText;
+          btn.disabled = false;
+        });
     });
     </script>
   </div>
