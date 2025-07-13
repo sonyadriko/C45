@@ -7,6 +7,9 @@ $successMessage = '';
 if (isset($_GET['upload']) && $_GET['upload'] === 'success') {
     $successMessage = "✅ Data berhasil diupload!";
 }
+if (isset($_GET['hapus']) && $_GET['hapus'] === 'success') {
+    $successMessage = "✅ Semua data berhasil dihapus!";
+}
 ?>
 
 <!DOCTYPE html>
@@ -31,10 +34,21 @@ if (isset($_GET['upload']) && $_GET['upload'] === 'success') {
       <!--  Header End -->
       <div class="body-wrapper-inner">
       <div class="container-fluid">
-  <h3 class="mb-4">Data Penilaian Responden</h3>
-  <div class="card">
+<?php if ($successMessage): ?>
+  <div class="alert alert-success alert-dismissible fade show" role="alert">
+    <?= $successMessage ?>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+<?php endif; ?>
+      <h3 class="mb-4">Data Penilaian Responden</h3>
+      <div class="card">
+
     <div class="card-body">
-      <div class="table-responsive">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <button id="btnProses" class="btn btn-success" style="width: auto; min-width: 200px; max-width: 100%;">Proses Analisis C4.5</button>
+        <button id="btnHapusSemua" class="btn btn-danger" style="width: auto; min-width: 200px; max-width: 100%;">Hapus Semua Data</button>
+      </div>
+      <div class="table-responsive mt-4">
         <table id="tabel-penilaian" class="table table-bordered table-striped">
           <thead class="table-dark">
             <tr>
@@ -82,7 +96,6 @@ if (isset($_GET['upload']) && $_GET['upload'] === 'success') {
           </tbody>
         </table>
       </div>
-      <button id="btnProses" class="btn btn-success" style="width: auto; min-width: 200px; max-width: 100%;">Proses Analisis C4.5</button>
 
     </div>
 
@@ -111,6 +124,12 @@ if (isset($_GET['upload']) && $_GET['upload'] === 'success') {
           btn.textContent = originalText;
           btn.disabled = false;
         });
+    });
+
+    document.getElementById('btnHapusSemua').addEventListener('click', function() {
+      if (confirm('Yakin ingin menghapus SEMUA data responden dan penilaian? Tindakan ini tidak dapat dibatalkan!')) {
+        window.location.href = 'hapus_semua_penilaian.php';
+      }
     });
     </script>
   </div>

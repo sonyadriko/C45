@@ -54,8 +54,8 @@ include '../database/config.php';
           <div class="card">
             <div class="card-body">
             
-              <h3>Visualisasi Pohon Keputusan</h3>
-              <svg id="tree" width="960" height="600"></svg>
+              <!-- <h3>Visualisasi Pohon Keputusan</h3> -->
+              <!-- <svg id="tree" width="960" height="600"></svg> -->
               <div class="mt-4">
               <h5>Gambar Pohon Keputusan</h5>
               <div style="overflow-x: auto;">
@@ -63,7 +63,7 @@ include '../database/config.php';
               </div>
             </div>
 
-            <script>
+            <!-- <script>
               const svg = d3.select("#tree"),
                     width = +svg.attr("width"),
                     height = +svg.attr("height");
@@ -100,7 +100,7 @@ include '../database/config.php';
                   .style("text-anchor", d => d.children ? "end" : "start")
                   .text(d => d.data.name);
               });
-            </script>
+            </script> -->
 
             </div>
 

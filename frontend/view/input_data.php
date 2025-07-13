@@ -1,6 +1,15 @@
 <?php
 include '../includes/auth_helper.php';
 requireAdmin(); // Hanya admin yang bisa akses halaman ini
+
+// Notifikasi sukses/gagal
+$alert = '';
+if (isset($_GET['sukses'])) {
+  $alert = '<div class="alert alert-success alert-dismissible fade show" role="alert">Data berhasil disimpan.<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>';
+}
+if (isset($_GET['gagal'])) {
+  $alert = '<div class="alert alert-danger alert-dismissible fade show" role="alert">Gagal menyimpan data!<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>';
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -22,6 +31,7 @@ requireAdmin(); // Hanya admin yang bisa akses halaman ini
       <!--  Header End -->
       <div class="body-wrapper-inner">
         <div class="container-fluid">
+          <?php if ($alert) echo $alert; ?>
           <h4 class="fw-semibold mb-4">Input Data Responden</h4>
 
           <div class="card mb-4">
@@ -43,8 +53,8 @@ requireAdmin(); // Hanya admin yang bisa akses halaman ini
               <form action="proses_input_manual.php" method="POST">
                 <div class="row g-3">
                   <div class="col-md-6">
-                    <label>Nama Responden</label>
-                    <input type="text" name="nama_responden" class="form-control" required>
+                    <label>Email</label>
+                    <input type="text" name="email" class="form-control" required>
                   </div>
                   <div class="col-md-6">
                     <label>Usia</label>
