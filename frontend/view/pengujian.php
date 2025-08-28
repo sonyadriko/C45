@@ -81,7 +81,7 @@ include '../database/config.php';
               </div>
             </div>
 
-            <!-- F1-Score -->
+            <!-- F1-Score dan Error -->
             <div class="row mb-4">
               <div class="col-md-4">
                 <div class="card text-white bg-info">
@@ -89,6 +89,67 @@ include '../database/config.php';
                     <h6 class="card-title">F1 Score</h6>
                     <h4 id="f1Score">-</h4>
                   </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="card text-white bg-danger">
+                  <div class="card-body">
+                    <h6 class="card-title">Error Rate</h6>
+                    <h4 id="errorRate">-</h4>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tabel Testing Detail -->
+            <div class="card mb-4">
+              <div class="card-header fw-semibold">Detail Testing per Sampel</div>
+              <div class="card-body">
+                <div class="table-responsive">
+                  <table class="table table-bordered table-sm" id="tabelTesting">
+                    <thead class="table-dark">
+                      <tr>
+                        <th>No</th>
+                        <th>Garansi</th>
+                        <th>Harga</th>
+                        <th>Empati</th>
+                        <th>Kepuasan<br>(Actual)</th>
+                        <th>Hasil<br>(Predicted)</th>
+                        <th>TP</th>
+                        <th>TN</th>
+                        <th>FP</th>
+                        <th>FN</th>
+                      </tr>
+                    </thead>
+                    <tbody id="testingTableBody">
+                      <!-- Data akan dimuat via AJAX -->
+                    </tbody>
+                    <tfoot class="table-light">
+                      <tr>
+                        <th colspan="6">TOTAL</th>
+                        <th id="totalTP">-</th>
+                        <th id="totalTN">-</th>
+                        <th id="totalFP">-</th>
+                        <th id="totalFN">-</th>
+                      </tr>
+                      <tr>
+                        <th colspan="6">Accuracy</th>
+                        <th colspan="4" id="tableAccuracy">-</th>
+                      </tr>
+                      <tr>
+                        <th colspan="6">Precision</th>
+                        <th colspan="4" id="tablePrecision">-</th>
+                      </tr>
+                      <tr>
+                        <th colspan="6">Recall</th>
+                        <th colspan="4" id="tableRecall">-</th>
+                      </tr>
+                      <tr>
+                        <th colspan="6">Error</th>
+                        <th colspan="4" id="tableError">-</th>
+                      </tr>
+                    </tfoot>
+                  </table>
                 </div>
               </div>
             </div>
@@ -130,7 +191,7 @@ include '../database/config.php';
   <?php include 'partials/footer.php' ?>
 
   <!-- Script -->
-  <script src="../assets/libs/jquery/dist/jquery.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="../assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
   <script src="../assets/js/sidebarmenu.js"></script>
   <script src="../assets/js/app.min.js"></script>
@@ -143,30 +204,66 @@ include '../database/config.php';
         $('#loadingSpinner').removeClass('d-none');
         $('#hasilPengujian').addClass('d-none');
         
-        // Panggil API Flask
+        // Panggil API Flask baru untuk testing detail
         $.ajax({
-          url: 'http://localhost:5000/c45/akurasi',
+          url: 'http://localhost:5000/c45/testing',
           method: 'GET',
           dataType: 'json',
           success: function(data) {
-            // Update nilai-nilai
-            $('#akurasi').text((data.akurasi * 100).toFixed(2) + '%');
-            $('#precision').text((data.precision * 100).toFixed(2) + '%');
-            $('#recall').text((data.recall * 100).toFixed(2) + '%');
-            $('#f1Score').text((data.f1_score * 100).toFixed(2) + '%');
+            const metrics = data.metrics;
+            
+            // Update nilai-nilai metrics
+            $('#akurasi').text((metrics.accuracy * 100).toFixed(2) + '%');
+            $('#precision').text((metrics.precision * 100).toFixed(2) + '%');
+            $('#recall').text((metrics.recall * 100).toFixed(2) + '%');
+            $('#f1Score').text((metrics.f1_score * 100).toFixed(2) + '%');
+            $('#errorRate').text((metrics.error_rate * 100).toFixed(2) + '%');
+            
+            // Populate testing table
+            const tbody = $('#testingTableBody');
+            tbody.empty();
+            
+            data.testing_results.forEach(function(row, index) {
+              const isCorrect = row.actual === row.predicted;
+              const rowClass = isCorrect ? 'table-success' : 'table-danger';
+              
+              const tr = `
+                <tr class="${rowClass}">
+                  <td>${index + 1}</td>
+                  <td>${row.garansi}</td>
+                  <td>${row.harga}</td>
+                  <td>${row.empati}</td>
+                  <td>${row.actual}</td>
+                  <td>${row.predicted}</td>
+                  <td>${row.tp}</td>
+                  <td>${row.tn}</td>
+                  <td>${row.fp}</td>
+                  <td>${row.fn}</td>
+                </tr>
+              `;
+              tbody.append(tr);
+            });
+            
+            // Update totals in table footer
+            $('#totalTP').text(metrics.total_tp);
+            $('#totalTN').text(metrics.total_tn);
+            $('#totalFP').text(metrics.total_fp);
+            $('#totalFN').text(metrics.total_fn);
+            
+            // Update metrics in table footer
+            $('#tableAccuracy').text((metrics.accuracy * 100).toFixed(2) + '%');
+            $('#tablePrecision').text((metrics.precision * 100).toFixed(2) + '%');
+            $('#tableRecall').text((metrics.recall * 100).toFixed(2) + '%');
+            $('#tableError').text((metrics.error_rate * 100).toFixed(2) + '%');
             
             // Update confusion matrix
-            if (data.kelas_positif) {
-              $('#kelasPositif').text('Pred: ' + data.kelas_positif);
-              $('#aktualPositif').text('Aktual: ' + data.kelas_positif);
-            }
-            
-            if (data.confusion_matrix && data.confusion_matrix.length >= 2) {
-              $('#tp').text(data.confusion_matrix[0][0] || '-');
-              $('#fn').text(data.confusion_matrix[0][1] || '-');
-              $('#fp').text(data.confusion_matrix[1][0] || '-');
-              $('#tn').text(data.confusion_matrix[1][1] || '-');
-            }
+            const cm = data.confusion_matrix;
+            $('#kelasPositif').text('Pred: Puas');
+            $('#aktualPositif').text('Aktual: Puas');
+            $('#tp').text(cm[0][0]);
+            $('#fn').text(cm[0][1]);
+            $('#fp').text(cm[1][0]);
+            $('#tn').text(cm[1][1]);
             
             // Tampilkan hasil
             $('#hasilPengujian').removeClass('d-none');

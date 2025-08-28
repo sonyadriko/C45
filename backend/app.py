@@ -908,6 +908,96 @@ def cek_akurasi():
         'kelas_positif': y_labels[0] if len(y_labels) >= 1 else None
     })
 
+@app.route('/c45/testing', methods=['GET'])
+def run_testing():
+    """Endpoint untuk testing detail per sampel dengan confusion matrix"""
+    df = get_data()
+    pivot = df.pivot(index='id_responden', columns='nama_kriteria', values='nilai').reset_index()
+
+    if 'Kepuasan' not in pivot.columns:
+        return jsonify({'error': 'Kolom Kepuasan tidak ditemukan'}), 400
+
+    target_column = 'Kepuasan'
+    attributes = [col for col in pivot.columns if col not in ['id_responden', target_column]]
+    
+    # Build manual tree untuk prediksi
+    manual_tree = build_manual_tree_consistent(pivot, attributes, target_column)
+    
+    # Function untuk prediksi berdasarkan manual tree
+    def predict_sample(sample, tree):
+        if 'class' in tree:
+            return tree['class']
+        
+        attribute = tree['attribute']
+        value = sample[attribute]
+        
+        if value in tree['children']:
+            return predict_sample(sample, tree['children'][value])
+        else:
+            # Default ke majority class jika value tidak ada di tree
+            return 'Puas'  # fallback
+    
+    # Testing untuk setiap sampel
+    testing_results = []
+    tp = tn = fp = fn = 0
+    
+    for idx, row in pivot.iterrows():
+        actual = row[target_column]
+        predicted = predict_sample(row, manual_tree)
+        
+        # Hitung TP, TN, FP, FN untuk sample ini
+        sample_tp = sample_tn = sample_fp = sample_fn = 0
+        
+        if actual == 'Puas' and predicted == 'Puas':
+            sample_tp = 1
+            tp += 1
+        elif actual == 'Tidak Puas' and predicted == 'Tidak Puas':
+            sample_tn = 1
+            tn += 1
+        elif actual == 'Tidak Puas' and predicted == 'Puas':
+            sample_fp = 1
+            fp += 1
+        elif actual == 'Puas' and predicted == 'Tidak Puas':
+            sample_fn = 1
+            fn += 1
+        
+        testing_results.append({
+            'garansi': row.get('Garansi', '-'),
+            'harga': row.get('Harga', '-'),
+            'empati': row.get('Empati', '-'),
+            'actual': actual,
+            'predicted': predicted,
+            'tp': sample_tp,
+            'tn': sample_tn,
+            'fp': sample_fp,
+            'fn': sample_fn
+        })
+    
+    # Calculate metrics
+    total_samples = tp + tn + fp + fn
+    accuracy = (tp + tn) / total_samples if total_samples > 0 else 0
+    precision = tp / (tp + fp) if (tp + fp) > 0 else 0
+    recall = tp / (tp + fn) if (tp + fn) > 0 else 0
+    f1_score = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
+    error_rate = (fp + fn) / total_samples if total_samples > 0 else 0
+    
+    return jsonify({
+        'message': 'Testing berhasil',
+        'testing_results': testing_results,
+        'confusion_matrix': [[tp, fn], [fp, tn]],
+        'metrics': {
+            'accuracy': accuracy,
+            'precision': precision,
+            'recall': recall,
+            'f1_score': f1_score,
+            'error_rate': error_rate,
+            'total_tp': tp,
+            'total_tn': tn,
+            'total_fp': fp,
+            'total_fn': fn
+        }
+    })
+
 @app.route('/c45/tree-image', methods=['GET'])
 def get_tree_image():
     """Serve pohon decision sebagai gambar"""

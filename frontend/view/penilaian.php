@@ -141,7 +141,8 @@ if (isset($_GET['hapus']) && $_GET['hapus'] === 'success') {
 
 
 
-  <script src="../assets/libs/jquery/dist/jquery.min.js"></script>
+  <!-- jQuery must be loaded first -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="../assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
   <script src="../assets/js/sidebarmenu.js"></script>
   <script src="../assets/js/app.min.js"></script>
