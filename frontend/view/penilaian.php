@@ -107,7 +107,8 @@ if (isset($_GET['hapus']) && $_GET['hapus'] === 'success') {
       btn.textContent = 'Memproses...';
       btn.disabled = true;
       
-      fetch('http://localhost:5000/c45/run')
+      // fetch('http://127.0.0.1:5000/c45/run')
+      fetch('http://127.0.0.1:5000/c45/manual')
         .then(res => res.json())
         .then(data => {
           // Tampilkan hasil dalam alert atau buat elemen baru

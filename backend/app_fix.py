@@ -142,7 +142,7 @@ def calculate_gain_ratio(data, attribute, target_column):
     
     return gain_ratio, gain_details
 
-def build_manual_tree(data, attributes, target_column, depth=0, max_depth=10):
+def build_manual_tree(data, attributes, target_column, depth=0, max_depth=5):
     """Manual C4.5 Decision Tree Builder"""
     
     # Base cases
@@ -232,28 +232,10 @@ def build_tree(clf, feature_names, y_labels):
 
     return recurse(0)
 
-def build_manual_tree_consistent(data, attributes, target_column, path="", depth=0, max_depth=10):
+def build_manual_tree_consistent(data, attributes, target_column, path=""):
     """Build manual tree konsisten dengan urutan tabel"""
     
     # Build tree dengan forced sequence
-    
-    # Base cases
-    if len(data) == 0 or depth >= max_depth:
-        return None
-    
-    # Check if pure node
-    if len(data[target_column].unique()) == 1:
-        return {
-            'class': data[target_column].iloc[0],
-            'samples': len(data)
-        }
-    
-    if len(attributes) == 0:
-        majority_class = data[target_column].mode()[0]
-        return {
-            'class': majority_class,
-            'samples': len(data)
-        }
     
     # Force sequence berdasarkan path
     if not path:  # Root level
@@ -327,16 +309,8 @@ def build_manual_tree_consistent(data, attributes, target_column, path="", depth
                 # Build subtree dengan path tracking
                 new_path = f"{path}→{root_attr}={value}" if path else f"{root_attr}={value}"
                 next_remaining = [attr for attr in remaining_attrs if attr != next_attr]
-                subtree = build_manual_tree_consistent(subset, [next_attr] + next_remaining, target_column, new_path, depth + 1, max_depth)
-                if subtree:
-                    tree['children'][value] = subtree
-                else:
-                    # Fallback to leaf if subtree is None
-                    majority_class = subset[target_column].mode()[0]
-                    tree['children'][value] = {
-                        'class': majority_class,
-                        'samples': len(subset)
-                    }
+                subtree = build_manual_tree_consistent(subset, [next_attr] + next_remaining, target_column, new_path)
+                tree['children'][value] = subtree
             else:
                 # No more attributes, make leaf
                 majority_class = subset[target_column].mode()[0]
@@ -460,7 +434,7 @@ def run_c45_manual():
         'decision_tree': manual_tree
     })
 
-def build_decision_table(data, attributes, target_column, node_prefix="", depth=0, max_depth=8):
+def build_decision_table(data, attributes, target_column, node_prefix="", depth=0, max_depth=3):
     """Recursive function to build decision tree table with node numbering"""
     table_rows = []
     
@@ -542,7 +516,7 @@ def build_decision_table(data, attributes, target_column, node_prefix="", depth=
     
     return table_rows
 
-def build_complete_tree_table(data, attributes, target_column, current_path="ROOT", depth=0, max_depth=8):
+def build_complete_tree_table(data, attributes, target_column, current_path="ROOT", depth=0, max_depth=4):
     """Build complete decision tree dengan pemisahan jelas per level"""
     steps = []
     
