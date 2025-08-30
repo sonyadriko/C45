@@ -8,8 +8,11 @@ requireAdmin(); // Hanya admin yang bisa akses halaman ini
 <head>
   <meta charset="UTF-8">
   <title>Tabel Perhitungan C4.5</title>
-  <link rel="stylesheet" href="../assets/css/styles.min.css">
-  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+  <?php 
+  // Load required styles for this page
+  $load_styles = ['datatables'];
+  include 'partials/styles.php'; 
+  ?>
   <style>
     .table-calculation {
       font-size: 0.9rem;
@@ -111,13 +114,12 @@ requireAdmin(); // Hanya admin yang bisa akses halaman ini
   </div>
 </div>
 
-<script src="../assets/libs/jquery/dist/jquery.min.js"></script>
-<script src="../assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-<script src="../assets/js/sidebarmenu.js"></script>
-<script src="../assets/js/app.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
-
+<?php 
+  // Load required scripts for this page
+  $load_scripts = ['datatables'];
+  include 'partials/scripts.php'; 
+  ?>
+  
 <script>
 document.getElementById('btnMuat').addEventListener('click', function() {
   const loadingSpinner = document.getElementById('loadingSpinner');

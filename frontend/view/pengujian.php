@@ -11,10 +11,12 @@ include '../database/config.php';
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Pengujian C4.5</title>
-  <link rel="shortcut icon" type="image/png" href="../assets/images/logos/favicon.png" />
-  <link rel="stylesheet" href="../assets/css/styles.min.css" />
+  <?php 
+  // Load required styles for this page
+  $load_styles = ['datatables'];
+  include 'partials/styles.php'; 
+  ?>
 </head>
 <body>
   <!-- Wrapper -->
@@ -190,12 +192,11 @@ include '../database/config.php';
   <!-- Footer -->
   <?php include 'partials/footer.php' ?>
 
-  <!-- Script -->
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <script src="../assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="../assets/js/sidebarmenu.js"></script>
-  <script src="../assets/js/app.min.js"></script>
-  
+  <?php 
+  // Load required scripts for this page
+  $load_scripts = ['datatables'];
+  include 'partials/scripts.php'; 
+  ?>
   <script>
     $(document).ready(function() {
       $('#btnPengujian').click(function() {

@@ -1,5 +1,8 @@
 RewriteEngine On
 
+# Serve assets directory directly (before checking for files)
+RewriteRule ^assets/(.*)$ - [L]
+
 # First, serve existing files and directories
 RewriteCond %{REQUEST_FILENAME} -f [OR]
 RewriteCond %{REQUEST_FILENAME} -d
@@ -8,8 +11,15 @@ RewriteRule ^ - [L]
 # Redirect root to view/index.php
 RewriteRule ^$ view/index.php [L]
 
-# Redirect all other requests to view directory
+# Redirect all other requests to view directory (but not assets)
+RewriteCond %{REQUEST_URI} !^/c45/frontend/assets/
 RewriteRule ^(.*)$ view/$1 [L]
+
+# MIME type configuration
+<IfModule mod_mime.c>
+    AddType application/javascript .js
+    AddType text/css .css
+</IfModule>
 
 # Security headers
 <IfModule mod_headers.c>

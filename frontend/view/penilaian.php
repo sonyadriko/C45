@@ -17,8 +17,11 @@ if (isset($_GET['hapus']) && $_GET['hapus'] === 'success') {
 <head>
   <meta charset="UTF-8">
   <title>Data Penilaian</title>
-  <link rel="stylesheet" href="../assets/css/styles.min.css">
-  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+  <?php 
+  // Load required styles for this page
+  $load_styles = ['datatables'];
+  include 'partials/styles.php'; 
+  ?>
 </head>
 <body>
 
@@ -115,7 +118,7 @@ if (isset($_GET['hapus']) && $_GET['hapus'] === 'success') {
           alert('Analisis C4.5 berhasil diproses!\n\nHasil tersimpan di:\n- Gambar: ' + data.image_saved + '\n- JSON: ' + data.json_saved + '\n\nPesan: ' + data.message);
           
           // Redirect ke halaman pohon keputusan untuk melihat hasil
-          window.location.href = 'pohon_keputusan.php';
+          window.location.href = 'tabel_perhitungan.php';
         })
         .catch(err => {
           alert("Gagal memproses analisis: " + err);
@@ -141,19 +144,11 @@ if (isset($_GET['hapus']) && $_GET['hapus'] === 'success') {
 
 
 
-  <!-- jQuery must be loaded first -->
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <script src="../assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="../assets/js/sidebarmenu.js"></script>
-  <script src="../assets/js/app.min.js"></script>
-  <script src="../assets/libs/apexcharts/dist/apexcharts.min.js"></script>
-  <script src="../assets/libs/simplebar/dist/simplebar.js"></script>
-  <script src="../assets/js/dashboard.js"></script>
-  <!-- solar icons -->
-  <script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
-  <!-- DataTables JS -->
-  <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-  <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+  <?php 
+  // Load required scripts for this page
+  $load_scripts = ['datatables'];
+  include 'partials/scripts.php'; 
+  ?>
 <script>
   $(document).ready(function () {
     $('#tabel-penilaian').DataTable({

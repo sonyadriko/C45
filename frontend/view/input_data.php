@@ -16,7 +16,11 @@ if (isset($_GET['gagal'])) {
 <head>
   <meta charset="UTF-8">
   <title>Input Data Responden</title>
-  <link rel="stylesheet" href="../assets/css/styles.min.css">
+  <?php 
+  // Load required styles for this page
+  $load_styles = ['datatables'];
+  include 'partials/styles.php'; 
+  ?>
 </head>
 <body>
   <!--  Body Wrapper -->
@@ -89,9 +93,10 @@ if (isset($_GET['gagal'])) {
   <!-- Footer -->
   <?php include 'partials/footer.php' ?>
 
-  <script src="../assets/libs/jquery/dist/jquery.min.js"></script>
-  <script src="../assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="../assets/js/sidebarmenu.js"></script>
-  <script src="../assets/js/app.min.js"></script>
+  <?php 
+  // Load required scripts for this page
+  $load_scripts = ['datatables'];
+  include 'partials/scripts.php'; 
+  ?>
 </body>
 </html>
