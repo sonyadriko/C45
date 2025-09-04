@@ -54,14 +54,12 @@ $userRole = isset($_SESSION['user']['role']) ? $_SESSION['user']['role'] : 'user
                 <span class="hide-menu">Pohon Keputusan</span>
               </a>
             </li> -->
-            <?php if ($userRole === 'admin'): ?>
             <li class="sidebar-item">
               <a class="sidebar-link" href="./tabel_perhitungan.php" aria-expanded="false">
                 <iconify-icon icon="solar:calculator-bold" width="24" height="24"></iconify-icon>
                 <span class="hide-menu">Tabel Perhitungan</span>
               </a>
             </li>
-            <?php endif; ?>
             <li class="sidebar-item">
               <a class="sidebar-link" href="./pengujian.php" aria-expanded="false">
                 <iconify-icon icon="solar:monitor-bold" width="24" height="24"></iconify-icon>
