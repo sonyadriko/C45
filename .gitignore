@@ -167,8 +167,9 @@ dmypy.json
 !package.json
 *.png
 !favicon.png
-!assets/images/profile/**
+!frontend/assets/images/profile/**
 *.jpg
+!frontend/assets/images/profile/**
 *.jpeg
 *.gif
 *.svg
