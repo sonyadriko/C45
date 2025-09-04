@@ -116,7 +116,7 @@ requireAdmin(); // Hanya admin yang bisa akses halaman ini
 
 <?php 
   // Load required scripts for this page
-  $load_scripts = ['datatables'];
+  // $load_scripts = ['datatables'];
   include 'partials/scripts.php'; 
   ?>
   
