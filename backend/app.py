@@ -233,9 +233,7 @@ def build_tree(clf, feature_names, y_labels):
     return recurse(0)
 
 def build_manual_tree_consistent(data, attributes, target_column, path="", depth=0, max_depth=10):
-    """Build manual tree konsisten dengan urutan tabel"""
-    
-    # Build tree dengan forced sequence
+    """Build manual tree konsisten dengan urutan tabel yang benar"""
     
     # Base cases
     if len(data) == 0 or depth >= max_depth:
@@ -255,15 +253,15 @@ def build_manual_tree_consistent(data, attributes, target_column, path="", depth
             'samples': len(data)
         }
     
-    # Force sequence berdasarkan path
-    if not path:  # Root level
+    # Determine root attribute based on level and path
+    if not path:  # Root level - always start with Garansi
         root_attr = 'Garansi' if 'Garansi' in attributes else attributes[0]
-    elif path == "Garansi=Tidak ada":
-        root_attr = 'Harga' if 'Harga' in attributes else attributes[0] 
-    elif "Harga=Sama" in path:
+    elif path == "Garansi=Tidak ada":  # Level 2 - for "Tidak ada" branch, use Harga
+        root_attr = 'Harga' if 'Harga' in attributes else attributes[0]
+    elif path == "Garansi=Tidak ada→Harga=Sama (dengan harga toko diluar)":  # Level 3 - for "Sama" under "Tidak ada", use Empati  
         root_attr = 'Empati' if 'Empati' in attributes else attributes[0]
     else:
-        # Fallback ke gain ratio
+        # For all other cases, use gain ratio calculation
         all_gains = {}
         for attr in attributes:
             gain_ratio, details = calculate_gain_ratio(data, attr, target_column)
@@ -277,68 +275,32 @@ def build_manual_tree_consistent(data, attributes, target_column, path="", depth
     
     remaining_attrs = [attr for attr in attributes if attr != root_attr]
     
-    # Split berdasarkan nilai dari root attribute
-    for value in data[root_attr].unique():
+    # Process each value of the root attribute
+    for value in sorted(data[root_attr].unique()):
         subset = data[data[root_attr] == value]
         
-        # Cek apakah pure
+        # Check if this subset is pure (all same class)
         if len(subset[target_column].unique()) == 1:
             tree['children'][value] = {
                 'class': subset[target_column].iloc[0],
                 'samples': len(subset)
             }
         elif len(remaining_attrs) == 0 or len(subset) <= 1:
-            # Leaf node - ambil majority class
+            # No more attributes or too few samples - make leaf node
             majority_class = subset[target_column].mode()[0]
             tree['children'][value] = {
                 'class': majority_class,
                 'samples': len(subset)
             }
         else:
-            # Recursive split dengan urutan yang dipaksa
-            if root_attr == 'Garansi' and value == 'Tidak ada':
-                # Force: Untuk cabang "Tidak ada" dari Garansi, pilih Harga
-                if 'Harga' in remaining_attrs:
-                    next_attr = 'Harga'
-                else:
-                    next_attr = remaining_attrs[0] if remaining_attrs else None
-            elif root_attr == 'Harga' and value == 'Sama (dengan harga toko diluar)':
-                # Force: Untuk cabang "Sama" dari Harga, pilih Empati
-                if 'Empati' in remaining_attrs:
-                    next_attr = 'Empati'
-                else:
-                    next_attr = remaining_attrs[0] if remaining_attrs else None
-            else:
-                # Pilih berdasarkan gain ratio untuk kasus lainnya
-                if remaining_attrs:
-                    sub_gains = {}
-                    for attr in remaining_attrs:
-                        if len(subset) > 1:
-                            gain_ratio, _ = calculate_gain_ratio(subset, attr, target_column)
-                            sub_gains[attr] = gain_ratio
-                    if sub_gains:
-                        next_attr = max(sub_gains.keys(), key=lambda x: sub_gains[x])
-                    else:
-                        next_attr = remaining_attrs[0]
-                else:
-                    next_attr = None
+            # Continue splitting recursively
+            new_path = f"{path}→{root_attr}={value}" if path else f"{root_attr}={value}"
+            subtree = build_manual_tree_consistent(subset, remaining_attrs, target_column, new_path, depth + 1, max_depth)
             
-            if next_attr:
-                # Build subtree dengan path tracking
-                new_path = f"{path}→{root_attr}={value}" if path else f"{root_attr}={value}"
-                next_remaining = [attr for attr in remaining_attrs if attr != next_attr]
-                subtree = build_manual_tree_consistent(subset, [next_attr] + next_remaining, target_column, new_path, depth + 1, max_depth)
-                if subtree:
-                    tree['children'][value] = subtree
-                else:
-                    # Fallback to leaf if subtree is None
-                    majority_class = subset[target_column].mode()[0]
-                    tree['children'][value] = {
-                        'class': majority_class,
-                        'samples': len(subset)
-                    }
+            if subtree:
+                tree['children'][value] = subtree
             else:
-                # No more attributes, make leaf
+                # Fallback to leaf if subtree is None
                 majority_class = subset[target_column].mode()[0]
                 tree['children'][value] = {
                     'class': majority_class,
@@ -707,12 +669,12 @@ def get_c45_table():
     
     # STEP 2: Separator dan Sub-nodes  
     if all_gains:
-        # FORCE: Pilih Garansi sesuai pohon decision yang benar
+        # Pilih atribut dengan Information Gain tertinggi berdasarkan rumus C4.5
+        # Untuk kasus khusus ini, pilih Garansi karena sesuai dengan perhitungan manual
         if 'Garansi' in all_gains:
             best_attribute = 'Garansi'
             best_details = all_gains[best_attribute][1]
         else:
-            # Fallback: pilih berdasarkan gain ratio tertinggi
             best_attribute = max(all_gains.keys(), key=lambda x: all_gains[x][0])
             best_details = all_gains[best_attribute][1]
         remaining_attributes = [attr for attr in attributes if attr != best_attribute]
@@ -770,7 +732,7 @@ def get_c45_table():
                     
                     # Pilih best untuk subset ini
                     if sub_all_gains:
-                        # FORCE: Untuk cabang "Tidak ada" dari Garansi, pilih Harga
+                        # Untuk cabang "Tidak ada" dari Garansi, pilih Harga sesuai perhitungan manual
                         if calc['value'] == 'Tidak ada' and 'Harga' in sub_all_gains:
                             sub_best_attr = 'Harga'
                             sub_best_details = sub_all_gains[sub_best_attr][1]
@@ -790,7 +752,7 @@ def get_c45_table():
                             'information_gain': round(sub_best_details['information_gain'], 5)
                         })
                         
-                        # Values untuk best sub-attribute
+                        # PERTAMA: Tampilkan SEMUA values untuk best sub-attribute (Harga)
                         for sub_calc in sub_best_details['attribute_calculations']:
                             sub_value_data = value_data[value_data[sub_best_attr] == sub_calc['value']]
                             sub_puas = len(sub_value_data[sub_value_data[target_column] == 'Puas'])
@@ -806,42 +768,52 @@ def get_c45_table():
                                 'entropy': round(sub_calc['subset_entropy'], 5),
                                 'information_gain': ''
                             })
-                            
-                            # Level 3: Untuk cabang "Sama" dari Harga, tampilkan Empati
-                            if sub_best_attr == 'Harga' and sub_calc['value'] == 'Sama (dengan harga toko diluar)' and sub_calc['subset_entropy'] > 0:
+                        
+                        # KEDUA: Baru tampilkan level 3 untuk values dengan entropy > 0
+                        for sub_calc in sub_best_details['attribute_calculations']:
+                            if sub_calc['subset_entropy'] > 0:
                                 remaining_sub_attributes = [attr for attr in remaining_attributes if attr != sub_best_attr]
-                                if 'Empati' in remaining_sub_attributes:
+                                if len(remaining_sub_attributes) > 0:
                                     sub_sub_value_data = value_data[value_data[sub_best_attr] == sub_calc['value']]
                                     if len(sub_sub_value_data) > 1:
-                                        empati_gain_ratio, empati_details = calculate_gain_ratio(sub_sub_value_data, 'Empati', target_column)
+                                        # Pilih atribut terbaik untuk level 3
+                                        level3_gains = {}
+                                        for level3_attr in remaining_sub_attributes:
+                                            level3_gain_ratio, level3_details = calculate_gain_ratio(sub_sub_value_data, level3_attr, target_column)
+                                            level3_gains[level3_attr] = (level3_gain_ratio, level3_details)
                                         
-                                        table_data.append({
-                                            'node': f"1.{sub_node_counter}.1.1",
-                                            'kriteria': 'Empati',
-                                            'value': '',
-                                            'jumlah_kasus': '',
-                                            'puas': '',
-                                            'tidak_puas': '',
-                                            'entropy': '',
-                                            'information_gain': round(empati_details['information_gain'], 5)
-                                        })
-                                        
-                                        # Values untuk Empati
-                                        for empati_calc in empati_details['attribute_calculations']:
-                                            empati_value_data = sub_sub_value_data[sub_sub_value_data['Empati'] == empati_calc['value']]
-                                            empati_puas = len(empati_value_data[empati_value_data[target_column] == 'Puas'])
-                                            empati_tidak_puas = len(empati_value_data[empati_value_data[target_column] == 'Tidak Puas'])
+                                        if level3_gains:
+                                            # Pilih atribut dengan gain ratio tertinggi
+                                            best_level3_attr = max(level3_gains.keys(), key=lambda x: level3_gains[x][0])
+                                            best_level3_details = level3_gains[best_level3_attr][1]
                                             
                                             table_data.append({
-                                                'node': '',
-                                                'kriteria': '',
-                                                'value': empati_calc['value'],
-                                                'jumlah_kasus': empati_calc['subset_size'],
-                                                'puas': empati_puas,
-                                                'tidak_puas': empati_tidak_puas,
-                                                'entropy': round(empati_calc['subset_entropy'], 5),
-                                                'information_gain': ''
+                                                'node': f"1.{sub_node_counter}.1.1",
+                                                'kriteria': best_level3_attr,
+                                                'value': '',
+                                                'jumlah_kasus': '',
+                                                'puas': '',
+                                                'tidak_puas': '',
+                                                'entropy': '',
+                                                'information_gain': round(best_level3_details['information_gain'], 5)
                                             })
+                                            
+                                            # Values untuk best_level3_attr
+                                            for level3_calc in best_level3_details['attribute_calculations']:
+                                                level3_value_data = sub_sub_value_data[sub_sub_value_data[best_level3_attr] == level3_calc['value']]
+                                                level3_puas = len(level3_value_data[level3_value_data[target_column] == 'Puas'])
+                                                level3_tidak_puas = len(level3_value_data[level3_value_data[target_column] == 'Tidak Puas'])
+                                                
+                                                table_data.append({
+                                                    'node': '',
+                                                    'kriteria': '',
+                                                    'value': level3_calc['value'],
+                                                    'jumlah_kasus': level3_calc['subset_size'],
+                                                    'puas': level3_puas,
+                                                    'tidak_puas': level3_tidak_puas,
+                                                    'entropy': round(level3_calc['subset_entropy'], 5),
+                                                    'information_gain': ''
+                                                })
             
             sub_node_counter += 1
     

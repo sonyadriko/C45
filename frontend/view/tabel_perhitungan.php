@@ -1,6 +1,6 @@
 <?php
 include '../includes/auth_helper.php';
-requireAdmin(); // Hanya admin yang bisa akses halaman ini
+// requireAdmin(); // Hanya admin yang bisa akses halaman ini
 ?>
 
 <!DOCTYPE html>
@@ -55,6 +55,7 @@ requireAdmin(); // Hanya admin yang bisa akses halaman ini
     <!--  Header End -->
     <div class="body-wrapper-inner">
       <div class="container-fluid">
+<?php if(isAdmin()): ?>
         <div class="d-flex justify-content-between align-items-center mb-4">
           <h3>Tabel Perhitungan C4.5</h3>
           <div>
@@ -62,9 +63,15 @@ requireAdmin(); // Hanya admin yang bisa akses halaman ini
             <button id="btnPohon" class="btn btn-success">Lihat Pohon Keputusan</button>
           </div>
         </div>
+        <?php else: ?>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h3>Pohon Keputusan C4.5</h3>
+        </div>
+        <?php endif; ?>
 
         <div class="card">
           <div class="card-body">
+            <?php if(isAdmin()): ?>
             <div class="loading-spinner" id="loadingSpinner">
               <div class="spinner-border text-primary" role="status">
                 <span class="visually-hidden">Loading...</span>
@@ -107,6 +114,24 @@ requireAdmin(); // Hanya admin yang bisa akses halaman ini
                 <img id="pohonImage" src="" alt="Pohon Keputusan" class="img-fluid" style="max-width: 100%; height: auto;">
               </div>
             </div>
+            <?php else: ?>
+            <div class="loading-spinner" id="loadingSpinnerKepala">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+              <p class="mt-2">Memuat pohon keputusan...</p>
+            </div>
+            
+            <div id="pohonContainerKepala" class="mt-4">
+              <div class="text-center">
+                <img id="pohonImageKepala" src="" alt="Pohon Keputusan" class="img-fluid" style="max-width: 100%; height: auto;">
+              </div>
+            </div>
+            
+            <div id="errorMessageKepala" class="alert alert-danger" style="display: none;">
+              <p id="errorTextKepala"></p>
+            </div>
+            <?php endif; ?>
           </div>
         </div>
       </div>
@@ -121,6 +146,7 @@ requireAdmin(); // Hanya admin yang bisa akses halaman ini
   ?>
   
 <script>
+<?php if(isAdmin()): ?>
 document.getElementById('btnMuat').addEventListener('click', function() {
   const loadingSpinner = document.getElementById('loadingSpinner');
   const tableContainer = document.getElementById('tableContainer');
@@ -244,6 +270,39 @@ document.getElementById('btnPohon').addEventListener('click', function() {
       btn.textContent = 'Lihat Pohon Keputusan';
     });
 });
+<?php else: ?>
+// Auto load pohon keputusan untuk kepala toko
+document.addEventListener('DOMContentLoaded', function() {
+  const loadingSpinner = document.getElementById('loadingSpinnerKepala');
+  const pohonContainer = document.getElementById('pohonContainerKepala');
+  const pohonImage = document.getElementById('pohonImageKepala');
+  const errorMessage = document.getElementById('errorMessageKepala');
+  
+  // Show loading
+  loadingSpinner.style.display = 'block';
+  
+  fetch('http://127.0.0.1:5000/c45/run')
+    .then(response => response.json())
+    .then(data => {
+      if (data.error) {
+        throw new Error(data.error);
+      }
+      
+      // Tampilkan gambar pohon
+      const timestamp = new Date().getTime();
+      pohonImage.src = `http://127.0.0.1:5000/c45/tree-image?t=${timestamp}`;
+      pohonContainer.style.display = 'block';
+    })
+    .catch(error => {
+      document.getElementById('errorTextKepala').textContent = 'Error: ' + error.message;
+      errorMessage.style.display = 'block';
+      console.error('Error:', error);
+    })
+    .finally(() => {
+      loadingSpinner.style.display = 'none';
+    });
+});
+<?php endif; ?>
 </script>
 
 </body>
