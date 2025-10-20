@@ -110,8 +110,8 @@ if (isset($_GET['hapus']) && $_GET['hapus'] === 'success') {
       btn.textContent = 'Memproses...';
       btn.disabled = true;
       
-      // fetch('http://localhost:5000/c45/run')
-      fetch('http://localhost:5000/c45/manual')
+      // fetch('http://127.0.0.1:5000/c45/run')
+      fetch('http://127.0.0.1:5000/c45/manual')
         .then(res => {
           if (!res.ok) {
             throw new Error(`HTTP error! status: ${res.status}`);
