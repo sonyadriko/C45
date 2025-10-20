@@ -110,9 +110,14 @@ if (isset($_GET['hapus']) && $_GET['hapus'] === 'success') {
       btn.textContent = 'Memproses...';
       btn.disabled = true;
       
-      // fetch('http://127.0.0.1:5000/c45/run')
-      fetch('http://127.0.0.1:5000/c45/manual')
-        .then(res => res.json())
+      // fetch('http://localhost:5000/c45/run')
+      fetch('http://localhost:5000/c45/manual')
+        .then(res => {
+          if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`);
+          }
+          return res.json();
+        })
         .then(data => {
           // Tampilkan hasil dalam alert atau buat elemen baru
           alert('Analisis C4.5 berhasil diproses!\n\nHasil tersimpan di:\n- Gambar: ' + data.image_saved + '\n- JSON: ' + data.json_saved + '\n\nPesan: ' + data.message);
@@ -121,7 +126,8 @@ if (isset($_GET['hapus']) && $_GET['hapus'] === 'success') {
           window.location.href = 'tabel_perhitungan.php';
         })
         .catch(err => {
-          alert("Gagal memproses analisis: " + err);
+          console.error('Error details:', err);
+          alert("Gagal memproses analisis: " + err.message);
         })
         .finally(() => {
           // Kembalikan button ke state semula

@@ -237,20 +237,12 @@ def build_manual_tree_consistent(data, attributes, target_column, path=""):
     
     # Build tree dengan forced sequence
     
-    # Force sequence berdasarkan path
-    if not path:  # Root level
-        root_attr = 'Garansi' if 'Garansi' in attributes else attributes[0]
-    elif path == "Garansi=Tidak ada":
-        root_attr = 'Harga' if 'Harga' in attributes else attributes[0] 
-    elif "Harga=Sama" in path:
-        root_attr = 'Empati' if 'Empati' in attributes else attributes[0]
-    else:
-        # Fallback ke gain ratio
-        all_gains = {}
-        for attr in attributes:
-            gain_ratio, details = calculate_gain_ratio(data, attr, target_column)
-            all_gains[attr] = gain_ratio
-        root_attr = max(all_gains.keys(), key=lambda x: all_gains[x]) if all_gains else attributes[0]
+    # Pilih attribute dengan gain ratio tertinggi (algoritma C4.5 yang benar)
+    all_gains = {}
+    for attr in attributes:
+        gain_ratio, details = calculate_gain_ratio(data, attr, target_column)
+        all_gains[attr] = gain_ratio
+    root_attr = max(all_gains.keys(), key=lambda x: all_gains[x]) if all_gains else attributes[0]
     
     tree = {
         'attribute': root_attr,
@@ -277,33 +269,19 @@ def build_manual_tree_consistent(data, attributes, target_column, path=""):
                 'samples': len(subset)
             }
         else:
-            # Recursive split dengan urutan yang dipaksa
-            if root_attr == 'Garansi' and value == 'Tidak ada':
-                # Force: Untuk cabang "Tidak ada" dari Garansi, pilih Harga
-                if 'Harga' in remaining_attrs:
-                    next_attr = 'Harga'
+            # Pilih attribute dengan gain ratio tertinggi untuk subset ini
+            if remaining_attrs:
+                sub_gains = {}
+                for attr in remaining_attrs:
+                    if len(subset) > 1:
+                        gain_ratio, _ = calculate_gain_ratio(subset, attr, target_column)
+                        sub_gains[attr] = gain_ratio
+                if sub_gains:
+                    next_attr = max(sub_gains.keys(), key=lambda x: sub_gains[x])
                 else:
-                    next_attr = remaining_attrs[0] if remaining_attrs else None
-            elif root_attr == 'Harga' and value == 'Sama (dengan harga toko diluar)':
-                # Force: Untuk cabang "Sama" dari Harga, pilih Empati
-                if 'Empati' in remaining_attrs:
-                    next_attr = 'Empati'
-                else:
-                    next_attr = remaining_attrs[0] if remaining_attrs else None
+                    next_attr = remaining_attrs[0]
             else:
-                # Pilih berdasarkan gain ratio untuk kasus lainnya
-                if remaining_attrs:
-                    sub_gains = {}
-                    for attr in remaining_attrs:
-                        if len(subset) > 1:
-                            gain_ratio, _ = calculate_gain_ratio(subset, attr, target_column)
-                            sub_gains[attr] = gain_ratio
-                    if sub_gains:
-                        next_attr = max(sub_gains.keys(), key=lambda x: sub_gains[x])
-                    else:
-                        next_attr = remaining_attrs[0]
-                else:
-                    next_attr = None
+                next_attr = None
             
             if next_attr:
                 # Build subtree dengan path tracking
@@ -372,8 +350,8 @@ def run_c45():
     target_column = 'Kepuasan'
     attributes = [col for col in pivot.columns if col not in ['id_responden', target_column]]
     
-    # Build manual tree sesuai urutan yang benar
-    manual_tree = build_manual_tree_consistent(pivot, attributes, target_column)
+    # Build manual tree menggunakan algoritma C4.5 yang benar
+    manual_tree = build_manual_tree(pivot, attributes, target_column)
     
     # Convert manual tree ke format Graphviz
     dot_content = convert_tree_to_graphviz(manual_tree, target_column)
@@ -681,14 +659,9 @@ def get_c45_table():
     
     # STEP 2: Separator dan Sub-nodes  
     if all_gains:
-        # FORCE: Pilih Garansi sesuai pohon decision yang benar
-        if 'Garansi' in all_gains:
-            best_attribute = 'Garansi'
-            best_details = all_gains[best_attribute][1]
-        else:
-            # Fallback: pilih berdasarkan gain ratio tertinggi
-            best_attribute = max(all_gains.keys(), key=lambda x: all_gains[x][0])
-            best_details = all_gains[best_attribute][1]
+        # Pilih attribute dengan gain ratio tertinggi
+        best_attribute = max(all_gains.keys(), key=lambda x: all_gains[x][0])
+        best_details = all_gains[best_attribute][1]
         remaining_attributes = [attr for attr in attributes if attr != best_attribute]
         
         # Separator row
@@ -742,15 +715,10 @@ def get_c45_table():
                         sub_gain_ratio, sub_details = calculate_gain_ratio(value_data, sub_attr, target_column)
                         sub_all_gains[sub_attr] = (sub_gain_ratio, sub_details)
                     
-                    # Pilih best untuk subset ini
+                    # Pilih best untuk subset ini berdasarkan gain ratio tertinggi
                     if sub_all_gains:
-                        # FORCE: Untuk cabang "Tidak ada" dari Garansi, pilih Harga
-                        if calc['value'] == 'Tidak ada' and 'Harga' in sub_all_gains:
-                            sub_best_attr = 'Harga'
-                            sub_best_details = sub_all_gains[sub_best_attr][1]
-                        else:
-                            sub_best_attr = max(sub_all_gains.keys(), key=lambda x: sub_all_gains[x][0])
-                            sub_best_details = sub_all_gains[sub_best_attr][1]
+                        sub_best_attr = max(sub_all_gains.keys(), key=lambda x: sub_all_gains[x][0])
+                        sub_best_details = sub_all_gains[sub_best_attr][1]
                         
                         # Tampilkan hanya best attribute untuk subset
                         table_data.append({
